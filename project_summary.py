@@ -1,3 +1,6 @@
+#TODO refactor. particular problem at moment is that milestone meta data has been effected by move to gmpp template.
+
+
 from docx import Document
 from bcompiler.utils import project_data_from_master
 from collections import OrderedDict
@@ -208,9 +211,9 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
     table1.cell(0, 0).width = Cm(7)
 
     table1.cell(0, 1).text = 'This quarter'  # this needs to be changed each quarter
-    table1.cell(0, 2).text = 'Q2 1819'
-    table1.cell(0, 3).text = 'Q1 1819'
-    table1.cell(0, 4).text = 'Q4 1718'
+    table1.cell(0, 2).text = 'Q3 1819'
+    table1.cell(0, 3).text = 'Q2 1819'
+    table1.cell(0, 4).text = 'Q1 1819'
 
     '''setting row height - partially working'''
     # todo understand row height better
@@ -456,35 +459,19 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
     heading = 'SRO Finance Narrative'
     y.add_run(str(heading)).bold = True
 
-    '''RDEL'''
-    rfin_dca_a = dictionary_1[name]['Project Costs Narrative RDEL']
-    if rfin_dca_a == None:
-        rfin_dca_a = 'None'
+    narrative = combine_narrtives(name, dictionary_1, gmpp_narrative_keys)
+    print(narrative)
+    if narrative == 'NoneNoneNone':
+        fin_text = combine_narrtives(name, dictionary_1, bicc_narrative_keys)
+    else:
+        fin_text = narrative
 
-    try:
-        rfin_dca_b = dictionary_2[name]['Project Costs Narrative RDEL']
-        if rfin_dca_b == None:
-            rfin_dca_b = 'None'
-    except KeyError:
-        rfin_dca_b = rfin_dca_a
+    compare_text_newandold(fin_text, fin_text, doc)
+    # compare_text_showall()
+    #compare_text_newandold(rfin_dca_a, rfin_dca_b, doc)
 
     # compare_text_showall()
-    compare_text_newandold(rfin_dca_a, rfin_dca_b, doc)
-
-    '''CDEL'''
-    cfin_dca_a = dictionary_1[name]['Project Costs Narrative CDEL']
-    if cfin_dca_a == None:
-        cfin_dca_a = 'None'
-
-    try:
-        cfin_dca_b = dictionary_2[name]['Project Costs Narrative CDEL']
-        if cfin_dca_b == None:
-            cfin_dca_b = 'None'
-    except KeyError:
-        cfin_dca_b = cfin_dca_a
-
-    # compare_text_showall()
-    compare_text_newandold(cfin_dca_a, cfin_dca_b, doc)
+    #compare_text_newandold(cfin_dca_a, cfin_dca_b, doc)
 
     '''financial chart heading'''  # new
     y = doc.add_paragraph()
@@ -559,10 +546,20 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
 
     return doc
 
+def combine_narrtives(name, dict, key_list):
+    output = ''
+    for key in key_list:
+        output = output + str(dict[name][key])
 
+    return output
 # doc = Document()
 
-current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_4_2018_wip.xlsx')
+gmpp_narrative_keys = ['Project Costs Narrative', 'Cost comparison with last quarters cost - narrative',
+                  'Cost comparison within this quarters cost - narrative']
+
+bicc_narrative_keys = ['Project Costs Narrative RDEL', 'Project Costs Narrative CDEL']
+
+current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_4_2018.xlsx')
 last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_3_2018.xlsx')
 Q2_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_2_2018.xlsx')
 Q3_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_1_2017.xlsx')
