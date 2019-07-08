@@ -1,15 +1,17 @@
-#TODO refactor. particular problem at moment is that milestone meta data has been effected by move to gmpp template.
+''' Programme that compiles summary sheets for projects. A number of the graphs for inclusion in the sheets are
+built via separate programmes.
+
+This is pretty old code so can no doubt be refactored and improved if I get around to it'''
 
 
 from docx import Document
 from bcompiler.utils import project_data_from_master
-from collections import OrderedDict
 import datetime
 from docx.oxml.ns import nsdecls
 from docx.oxml.ns import qn
 from docx.oxml import parse_xml
 from docx.oxml import OxmlElement
-from docx.shared import Cm, Inches, Pt, RGBColor
+from docx.shared import Cm, RGBColor
 import difflib
 
 
@@ -18,7 +20,6 @@ def get_project_names(data):
     for x in data:
         project_name_list.append(x)
     return project_name_list
-
 
 def converting_RAGs(rag):
     if rag == 'Green':
@@ -31,7 +32,6 @@ def converting_RAGs(rag):
         return 'A/R'
     else:
         return 'R'
-
 
 def cell_colouring(cell, colour):
     if colour == 'R':
@@ -47,10 +47,7 @@ def cell_colouring(cell, colour):
 
     cell._tc.get_or_add_tcPr().append(colour)
 
-
 '''function places text into doc highlighing all changes'''
-
-
 def compare_text_showall(text_1, text_2, doc):
     comp = difflib.Differ()
     diff = list(comp.compare(text_2.split(), text_1.split()))
@@ -101,10 +98,7 @@ def compare_text_showall(text_1, text_2, doc):
 
     return doc
 
-
 '''function places text into doc highlighing new and old text'''
-
-
 def compare_text_newandold(text_1, text_2, doc):
     comp = difflib.Differ()
     diff = list(comp.compare(text_2.split(), text_1.split()))
@@ -153,8 +147,8 @@ def compare_text_newandold(text_1, text_2, doc):
 
     return doc
 
-
-def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
+'''function that compiles the summary sheet'''
+def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, milestone_dict):
     doc = Document()
     print(name)
     heading = str(name)
@@ -173,7 +167,7 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
 
     # doc.add_paragraph()
     y = doc.add_paragraph()
-    a = dictionary_1[name]['SRO Full Name']
+    a = dictionary_1[name]['Senior Responsible Owner (SRO)']
     if a == None:
         a = 'TBC'
     else:
@@ -187,7 +181,7 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
     y.add_run('SRO name:  ' + str(a) + ',   Tele:  ' + str(b))
 
     y = doc.add_paragraph()
-    a = dictionary_1[name]['PD Full Name']
+    a = dictionary_1[name]['Project Director (PD)']
     if a == None:
         a = 'TBC'
     else:
@@ -211,9 +205,9 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
     table1.cell(0, 0).width = Cm(7)
 
     table1.cell(0, 1).text = 'This quarter'  # this needs to be changed each quarter
-    table1.cell(0, 2).text = 'Q3 1819'
-    table1.cell(0, 3).text = 'Q2 1819'
-    table1.cell(0, 4).text = 'Q1 1819'
+    table1.cell(0, 2).text = 'Q4 1819'
+    table1.cell(0, 3).text = 'Q3 1819'
+    table1.cell(0, 4).text = 'Q2 1819'
 
     '''setting row height - partially working'''
     # todo understand row height better
@@ -426,15 +420,15 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
 
     table1.cell(1, 0).text = str(dictionary_1[name]['Total Forecast'])
     a = dictionary_1[name]['Total Forecast']
-    b = dictionary_1[name]['Pre 18-19 RDEL Forecast Total']
+    b = dictionary_1[name]['Pre 19-20 RDEL Forecast Total']
     if b == None:
         b = 0
     # print(b)
-    c = dictionary_1[name]['Pre 18-19 CDEL Forecast Total']
+    c = dictionary_1[name]['Pre 19-20 CDEL Forecast Total']
     if c == None:
         c = 0
     # print(c)
-    d = dictionary_1[name]['Pre 18-19 Forecast Non-Gov']
+    d = dictionary_1[name]['Pre 19-20 Forecast Non-Gov']
     if d == None:
         d = 0
     # print(d)
@@ -460,7 +454,7 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
     y.add_run(str(heading)).bold = True
 
     narrative = combine_narrtives(name, dictionary_1, gmpp_narrative_keys)
-    print(narrative)
+    #print(narrative)
     if narrative == 'NoneNoneNone':
         fin_text = combine_narrtives(name, dictionary_1, bicc_narrative_keys)
     else:
@@ -492,20 +486,25 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4):
     table1.cell(0, 2).text = 'Start of Operations:'
     table1.cell(0, 3).text = 'Project End Date:'
 
-    c = dictionary_1[name]['Project MM18 Original Baseline']
+    key_dates = milestone_dict[name]
+
+    c = key_dates['Start of Project']
     try:
         c = datetime.datetime.strptime(c.isoformat(), '%Y-%M-%d').strftime('%d/%M/%Y')
     except AttributeError:
         c = 'Not reported'
+
     table1.cell(1, 0).text = str(c)
     table1.cell(1, 1).text = str(dictionary_1[name]['BICC approval point'])
-    a = dictionary_1[name]['Project MM20 Forecast - Actual']
+
+    a = key_dates['Start of Operation']
     try:
         a = datetime.datetime.strptime(a.isoformat(), '%Y-%M-%d').strftime('%d/%M/%Y')
         table1.cell(1, 2).text = str(a)
     except AttributeError:
         table1.cell(1, 2).text = 'None'
-    b = dictionary_1[name]['Project MM21 Forecast - Actual']
+
+    b = key_dates['Project End Date']
     try:
         b = datetime.datetime.strptime(b.isoformat(), '%Y-%M-%d').strftime('%d/%M/%Y')
     except AttributeError:
@@ -554,21 +553,53 @@ def combine_narrtives(name, dict, key_list):
     return output
 # doc = Document()
 
+def all_milestone_data(master_data):
+    upper_dict = {}
+
+    for name in master_data:
+        p_data = master_data[name]
+        lower_dict = {}
+        for i in range(1, 50):
+            try:
+                try:
+                    lower_dict[p_data['Approval MM' + str(i)]] = p_data['Approval MM' + str(i) + ' Forecast / Actual']
+                except KeyError:
+                    lower_dict[p_data['Approval MM' + str(i)]] = p_data['Approval MM' + str(i) + ' Forecast - Actual']
+            except KeyError:
+                pass
+
+            try:
+                lower_dict[p_data['Assurance MM' + str(i)]] = p_data['Assurance MM' + str(i) + ' Forecast - Actual']
+            except:
+                pass
+
+        for i in range(18, 67):
+            try:
+                lower_dict[p_data['Project MM' + str(i)]] = p_data['Project MM' + str(i) + ' Forecast - Actual']
+            except:
+                pass
+
+        upper_dict[name] = lower_dict
+
+    return upper_dict
+
 gmpp_narrative_keys = ['Project Costs Narrative', 'Cost comparison with last quarters cost - narrative',
                   'Cost comparison within this quarters cost - narrative']
 
 bicc_narrative_keys = ['Project Costs Narrative RDEL', 'Project Costs Narrative CDEL']
 
-current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_4_2018.xlsx')
-last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_3_2018.xlsx')
-Q2_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_2_2018.xlsx')
-Q3_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_1_2017.xlsx')
+current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\test_master.xlsx')
+last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_4_2018.xlsx')
+Q2_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_3_2018.xlsx')
+Q3_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_2_2018.xlsx')
 
 current_Q_list = list(current_Q_dict.keys())
 #current_Q_list = ['High Speed Rail Programme (HS2)']
 # current_Q_list.remove('Commercial Vehicle Services (CVS)')
 
+milestones = all_milestone_data(current_Q_dict)
+
 for x in current_Q_list:
-    a = printing(x, current_Q_dict, last_Q_dict, Q2_ago_dict, Q3_ago_dict)
-    a.save('C://Users//Standalone//Will//Q4_1819_{}_overview.docx'.format(x))
+    a = printing(x, current_Q_dict, last_Q_dict, Q2_ago_dict, Q3_ago_dict, milestones)
+    a.save('C://Users//Standalone//Will//Q1_1819_{}_overview_test.docx'.format(x))
 
