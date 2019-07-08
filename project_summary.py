@@ -1,5 +1,16 @@
-''' Programme that compiles summary sheets for projects. A number of the graphs for inclusion in the sheets are
-built via separate programmes.
+'''Programme that compiles project dashboards/summary sheets.
+
+Input:
+1) four quarters worth of data
+
+Output:
+1) MS word document in summary sheet structure containing information that can be handled by programme
+
+Supplementary programmes that need to be run to build charts for summary pages. Charts should be built and cut and paste
+into dashboards/summary sheets:
+1) project_finacial_profile.py . For financial charts
+2) milestone_comparison_3_quarters_ind.py . For milestones tables
+
 
 This is pretty old code so can no doubt be refactored and improved if I get around to it'''
 
@@ -204,10 +215,8 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     table1 = doc.add_table(rows=1, cols=5)
     table1.cell(0, 0).width = Cm(7)
 
-    table1.cell(0, 1).text = 'This quarter'  # this needs to be changed each quarter
-    table1.cell(0, 2).text = 'Q4 1819'
-    table1.cell(0, 3).text = 'Q3 1819'
-    table1.cell(0, 4).text = 'Q2 1819'
+    for i, quarter in enumerate(quarter_list):
+        table1.cell(0, i+1).text = quarter
 
     '''setting row height - partially working'''
     # todo understand row height better
@@ -582,6 +591,8 @@ def all_milestone_data(master_data):
         upper_dict[name] = lower_dict
 
     return upper_dict
+
+quarter_list = ['This Quarter', 'Q4 1819', 'Q3 1819', 'Q2 1819']
 
 gmpp_narrative_keys = ['Project Costs Narrative', 'Cost comparison with last quarters cost - narrative',
                   'Cost comparison within this quarters cost - narrative']
