@@ -4,15 +4,14 @@ Input:
 1) four quarters worth of data
 
 Output:
-1) MS word document in summary sheet structure containing information that can be handled by programme
+1) MS word document in structure of summary sheet / dashboard - with some areas missing, see below.
 
 Supplementary programmes that need to be run to build charts for summary pages. Charts should be built and cut and paste
 into dashboards/summary sheets:
 1) project_finacial_profile.py . For financial charts
 2) milestone_comparison_3_quarters_ind.py . For milestones tables
 
-
-This is pretty old code so can no doubt be refactored and improved if I get around to it'''
+'''
 
 
 from docx import Document
@@ -26,12 +25,6 @@ from docx.shared import Cm, RGBColor
 import difflib
 
 
-def get_project_names(data):
-    project_name_list = []
-    for x in data:
-        project_name_list.append(x)
-    return project_name_list
-
 def converting_RAGs(rag):
     if rag == 'Green':
         return 'G'
@@ -41,22 +34,28 @@ def converting_RAGs(rag):
         return 'A'
     elif rag == 'Amber/Red':
         return 'A/R'
-    else:
+    elif rag == 'Red':
         return 'R'
+    else:
+        return 'None'
 
 def cell_colouring(cell, colour):
-    if colour == 'R':
-        colour = parse_xml(r'<w:shd {} w:fill="cb1f00"/>'.format(nsdecls('w')))
-    elif colour == 'A/R':
-        colour = parse_xml(r'<w:shd {} w:fill="f97b31"/>'.format(nsdecls('w')))
-    elif colour == 'A':
-        colour = parse_xml(r'<w:shd {} w:fill="fce553"/>'.format(nsdecls('w')))
-    elif colour == 'A/G':
-        colour = parse_xml(r'<w:shd {} w:fill="a5b700"/>'.format(nsdecls('w')))
-    elif colour == 'G':
-        colour = parse_xml(r'<w:shd {} w:fill="17960c"/>'.format(nsdecls('w')))
+    try:
+        if colour == 'R':
+            colour = parse_xml(r'<w:shd {} w:fill="cb1f00"/>'.format(nsdecls('w')))
+        elif colour == 'A/R':
+            colour = parse_xml(r'<w:shd {} w:fill="f97b31"/>'.format(nsdecls('w')))
+        elif colour == 'A':
+            colour = parse_xml(r'<w:shd {} w:fill="fce553"/>'.format(nsdecls('w')))
+        elif colour == 'A/G':
+            colour = parse_xml(r'<w:shd {} w:fill="a5b700"/>'.format(nsdecls('w')))
+        elif colour == 'G':
+            colour = parse_xml(r'<w:shd {} w:fill="17960c"/>'.format(nsdecls('w')))
 
-    cell._tc.get_or_add_tcPr().append(colour)
+        cell._tc.get_or_add_tcPr().append(colour)
+
+    except TypeError:
+        pass
 
 '''function places text into doc highlighing all changes'''
 def compare_text_showall(text_1, text_2, doc):
@@ -160,6 +159,9 @@ def compare_text_newandold(text_1, text_2, doc):
 
 '''function that compiles the summary sheet'''
 def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, milestone_dict):
+
+    dict_list = [dictionary_1, dictionary_2, dictionary_3, dictionary_4]
+
     doc = Document()
     print(name)
     heading = str(name)
@@ -170,13 +172,6 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     intro.alignment = 1
     intro.bold = True
 
-    '''key names and contact details'''
-    # doc.add_paragraph()
-    # y = doc.add_paragraph()
-    # heading = 'Project Leadership'
-    # y.add_run(str(heading)).bold = True
-
-    # doc.add_paragraph()
     y = doc.add_paragraph()
     a = dictionary_1[name]['Senior Responsible Owner (SRO)']
     if a == None:
@@ -205,223 +200,50 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
 
     y.add_run('PD name:  ' + str(a) + ',   Tele:  ' + str(b))
 
-    '''DCA information'''
-    # y = doc.add_paragraph()
-    # heading = 'Project confidence trends'
-    # y.add_run(str(heading)).bold = True
-
     '''Start of table with DCA confidence ratings'''
-    # doc.add_paragraph()
     table1 = doc.add_table(rows=1, cols=5)
     table1.cell(0, 0).width = Cm(7)
 
+    '''quarter information in top row of table is here'''
     for i, quarter in enumerate(quarter_list):
         table1.cell(0, i+1).text = quarter
 
-    '''setting row height - partially working'''
-    # todo understand row height better
-    row = table1.rows[0]
-    tr = row._tr
-    trPr = tr.get_or_add_trPr()
-    trHeight = OxmlElement('w:trHeight')
-    trHeight.set(qn('w:val'), str(200))
-    trHeight.set(qn('w:hRule'), 'atLeast')
-    trPr.append(trHeight)
+    # '''setting row height - partially working'''
+    # # todo understand row height better
+    # row = table1.rows[0]
+    # tr = row._tr
+    # trPr = tr.get_or_add_trPr()
+    # trHeight = OxmlElement('w:trHeight')
+    # trHeight.set(qn('w:val'), str(200))
+    # trHeight.set(qn('w:hRule'), 'atLeast')
+    # trPr.append(trHeight)
 
-    '''SRO DCA ratings'''
+    SRO_conf_table_list = ['SRO DCA', 'Finance DCA', 'Benefits DCA', 'Resourcing DCA', 'Schedule DCA']
+    SRO_conf_key_list = ['Departmental DCA', 'SRO Finance confidence', 'SRO Benefits RAG', 'Overall Resource DCA - Now',
+                         'SRO Schedule Confidence']
 
-    table2 = doc.add_table(rows=1, cols=5)
-    table2.cell(0, 0).width = Cm(7)
-    table2.cell(0, 0).text = 'SRO DCA'
-    a = converting_RAGs(dictionary_1[name]['Departmental DCA'])
-    table2.cell(0, 1).text = a
-    cell_colouring(table2.cell(0, 1), a)
-
-    try:
-        a = converting_RAGs(dictionary_2[name]['Departmental DCA'])
-        table2.cell(0, 2).text = a
-        cell_colouring(table2.cell(0, 2), a)
-    except KeyError:
-        table2.cell(0, 2).text = 'N/A'
-
-    try:
-        a = converting_RAGs(dictionary_3[name]['Departmental DCA'])
-        table2.cell(0, 3).text = a
-        cell_colouring(table2.cell(0, 3), a)
-    except KeyError:
-        table2.cell(0, 3).text = 'N/A'
-
-    try:
-        a = converting_RAGs(dictionary_4[name]['Departmental DCA'])
-        table2.cell(0, 4).text = a
-        cell_colouring(table2.cell(0, 4), a)
-    except KeyError:
-        table2.cell(0, 4).text = 'N/A'
-
-    '''SRO Financial confidence'''
-
-    table3 = doc.add_table(rows=1, cols=5)
-    table3.cell(0, 0).width = Cm(7)
-    table3.cell(0, 0).text = 'Finance DCA'
-    a = dictionary_1[name]['SRO Finance confidence']
-    b = converting_RAGs(a)
-    if a != None:
-        table3.cell(0, 1).text = b
-        cell_colouring(table3.cell(0, 1), b)
-    else:
-        table3.cell(0, 1).text = 'Not reported'
-
-    try:
-        a = dictionary_2[name]['SRO Finance confidence']
-        b = converting_RAGs(a)
-        if a != None:
-            table3.cell(0, 2).text = b
-            cell_colouring(table3.cell(0, 2), b)
-        else:
-            table3.cell(0, 2).text = 'Not reported'
-    except KeyError:
-        table3.cell(0, 2).text = 'N/A'
-
-    try:
-        a = dictionary_3[name]['SRO Finance confidence']
-        b = converting_RAGs(a)
-        if a != None:
-            table3.cell(0, 3).text = b
-            cell_colouring(table3.cell(0, 3), b)
-        else:
-            table3.cell(0, 3).text = 'Not reported'
-    except KeyError:
-        table3.cell(0, 3).text = 'N/A'
-
-    try:
-        a = dictionary_4[name]['SRO Finance confidence']
-        b = converting_RAGs(a)
-        if a != None:
-            table3.cell(0, 4).text = b
-            cell_colouring(table3.cell(0, 4), b)
-        else:
-            table3.cell(0, 4).text = 'Not reported'
-    except KeyError:
-        table3.cell(0, 4).text = 'N/A'
-
-    '''SRO Benefits confidence'''
-
-    table4 = doc.add_table(rows=1, cols=5)
-    table4.cell(0, 0).width = Cm(7)
-    table4.cell(0, 0).text = 'Benefits DCA'
-    a = dictionary_1[name]['SRO Benefits RAG']
-    b = converting_RAGs(a)
-    if a != None:
-        table4.cell(0, 1).text = b
-        cell_colouring(table4.cell(0, 1), b)
-    else:
-        table4.cell(0, 1).text = 'Not reported'
-
-    try:
-        a = dictionary_2[name]['SRO Benefits RAG']
-        b = converting_RAGs(a)
-        if a != None:
-            table4.cell(0, 2).text = b
-            cell_colouring(table4.cell(0, 2), b)
-        else:
-            table4.cell(0, 2).text = 'Not reported'
-    except KeyError:
-        table4.cell(0, 2).text = 'N/A'
-
-    try:
-        a = dictionary_3[name]['SRO Benefits RAG']
-        b = converting_RAGs(a)
-        if a != None:
-            table4.cell(0, 3).text = b
-            cell_colouring(table4.cell(0, 3), b)
-        else:
-            table4.cell(0, 3).text = 'Not reported'
-    except KeyError:
-        table4.cell(0, 3).text = 'N/A'
-
-    try:
-        a = dictionary_4[name]['SRO Benefits RAG']
-        b = converting_RAGs(a)
-        if a != None:
-            table4.cell(0, 4).text = b
-            cell_colouring(table4.cell(0, 4), b)
-        else:
-            table4.cell(0, 4).text = 'Not reported'
-    except KeyError:
-        table4.cell(0, 4).text = 'N/A'
-
-    '''SRO resourcing DCA'''
-
-    table5 = doc.add_table(rows=1, cols=5)
-    table5.cell(0, 0).width = Cm(7)
-    table5.cell(0, 0).text = 'Resourcing DCA'
-    a = dictionary_1[name]['Overall Resource DCA - Now']
-    b = converting_RAGs(a)
-    if a != None:
-        table5.cell(0, 1).text = b
-        cell_colouring(table5.cell(0, 1), b)
-    else:
-        table5.cell(0, 1).text = 'Not reported'
-
-    try:
-        a = dictionary_2[name]['Overall Resource DCA - Now']
-        b = converting_RAGs(a)
-        if a != None:
-            table5.cell(0, 2).text = b
-            cell_colouring(table5.cell(0, 2), b)
-        else:
-            table5.cell(0, 2).text = 'Not reported'
-    except KeyError:
-        table5.cell(0, 2).text = 'N/A'
-
-    try:
-        a = dictionary_3[name]['Overall Resource DCA - Now']
-        b = converting_RAGs(a)
-        if a != None:
-            table5.cell(0, 3).text = b
-            cell_colouring(table5.cell(0, 3), b)
-        else:
-            table5.cell(0, 3).text = 'Not reported'
-    except KeyError:
-        table5.cell(0, 3).text = 'N/A'
-
-    try:
-        a = dictionary_4[name]['Overall Resource DCA - Now']
-        b = converting_RAGs(a)
-        if a != None:
-            table5.cell(0, 4).text = b
-            cell_colouring(table5.cell(0, 4), b)
-        else:
-            table5.cell(0, 4).text = 'Not reported'
-    except KeyError:
-        table5.cell(0, 4).text = 'N/A'
-
-    #TODO complete the below section for SRO schedule DCA as incomplete
-    '''SRO schedule DCA'''
-
-    table6 = doc.add_table(rows=1, cols=5)
-    table6.cell(0, 0).width = Cm(7)
-    table6.cell(0, 0).text = 'Schedule DCA'
-    a = dictionary_1[name]['SRO Schedule Confidence']
-    b = converting_RAGs(a)
-    if a != None:
-        table6.cell(0, 1).text = b
-        cell_colouring(table5.cell(0, 1), b)
-    else:
-        table6.cell(0, 1).text = 'Not reported'
-
+    '''All SRO RAG rating placed in table'''
+    for i in range(0, len(dict_list)+1):
+        table = doc.add_table(rows=1, cols=5)
+        table.cell(0, 0).width = Cm(7)
+        table.cell(0, 0).text = SRO_conf_table_list[i]
+        for x, dictionary in enumerate(dict_list):
+            try:
+                rating = converting_RAGs(dictionary[name][SRO_conf_key_list[i]])
+                table.cell(0, x + 1).text = rating
+                cell_colouring(table.cell(0, x + 1), rating)
+            except KeyError:
+                table.cell(0, x + 1).text = 'N/A'
 
     '''DCA Narrative text'''
-    doc.add_paragraph()  # new
+    doc.add_paragraph()
     y = doc.add_paragraph()
-    heading = 'SRO DCA Narrative'
+    heading = 'SRO Overall DCA Narrative'
     y.add_run(str(heading)).bold = True
 
     dca_a = dictionary_1[name]['Departmental DCA Narrative']
-    # print(dca_a)
     try:
         dca_b = dictionary_2[name]['Departmental DCA Narrative']
-        # print(dca_b)
     except KeyError:
         dca_b = dca_a
 
@@ -447,15 +269,12 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     b = dictionary_1[name]['Pre 19-20 RDEL Forecast Total']
     if b == None:
         b = 0
-    # print(b)
     c = dictionary_1[name]['Pre 19-20 CDEL Forecast Total']
     if c == None:
         c = 0
-    # print(c)
     d = dictionary_1[name]['Pre 19-20 Forecast Non-Gov']
     if d == None:
         d = 0
-    # print(d)
     e = b + c + d
     try:
         c = round(e / a * 100, 1)
@@ -469,7 +288,7 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     else:
         table1.cell(1, 2).text = a + ' ' + str(b)
     table1.cell(1, 3).text = str(dictionary_1[name]['Real or Nominal - Actual/Forecast'])
-    table1.cell(1, 4).text = 'complete manually'
+    table1.cell(1, 4).text = ''
 
     '''Finance DCA Narrative text'''
     doc.add_paragraph()
@@ -478,18 +297,13 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     y.add_run(str(heading)).bold = True
 
     narrative = combine_narrtives(name, dictionary_1, gmpp_narrative_keys)
-    #print(narrative)
     if narrative == 'NoneNoneNone':
         fin_text = combine_narrtives(name, dictionary_1, bicc_narrative_keys)
     else:
         fin_text = narrative
 
     compare_text_newandold(fin_text, fin_text, doc)
-    # compare_text_showall()
-    #compare_text_newandold(rfin_dca_a, rfin_dca_b, doc)
-
-    # compare_text_showall()
-    #compare_text_newandold(cfin_dca_a, cfin_dca_b, doc)
+    #compare_text_showall()
 
     '''financial chart heading'''  # new
     y = doc.add_paragraph()
@@ -516,7 +330,7 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     try:
         c = datetime.datetime.strptime(c.isoformat(), '%Y-%M-%d').strftime('%d/%M/%Y')
     except AttributeError:
-        c = 'Not reported'
+        c = 'None'
 
     table1.cell(1, 0).text = str(c)
     table1.cell(1, 1).text = str(dictionary_1[name]['BICC approval point'])
@@ -536,7 +350,6 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     table1.cell(1, 3).text = str(b)
 
     # TODO: workout generally styling options for doc, paragraphs and tables
-    # table1.style = "Heading1"
 
     '''milestone narrative text'''
     doc.add_paragraph()
@@ -560,12 +373,14 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
 
     '''milestone chart heading'''
     y = doc.add_paragraph()
-    heading = 'Milestone Analysis - Swimlane Chart and Movements'
+    heading = 'Project reported high-level milestones and schedule changes'
     y.add_run(str(heading)).bold = True
     y = doc.add_paragraph()
+    y.add_run('The below table presents all project reported remaining high-level milestones, with six months grace '
+              'from close of the current quarter. Milestones are sorted in chronological order. Changes in milestones '
+              'dates in comparison to last quarter and one year ago have been calculated and are provided')
+    y = doc.add_paragraph()
     y.add_run('{insert chart}')
-
-    # doc.add_page_break()
 
     return doc
 
@@ -575,7 +390,6 @@ def combine_narrtives(name, dict, key_list):
         output = output + str(dict[name][key])
 
     return output
-# doc = Document()
 
 def all_milestone_data(master_data):
     upper_dict = {}
@@ -614,7 +428,7 @@ gmpp_narrative_keys = ['Project Costs Narrative', 'Cost comparison with last qua
 
 bicc_narrative_keys = ['Project Costs Narrative RDEL', 'Project Costs Narrative CDEL']
 
-current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\test_master.xlsx')
+current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\Hs2_NPR_Q1_1918_draft.xlsx')
 last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_4_2018.xlsx')
 Q2_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_3_2018.xlsx')
 Q3_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_2_2018.xlsx')
@@ -627,5 +441,5 @@ milestones = all_milestone_data(current_Q_dict)
 
 for x in current_Q_list:
     a = printing(x, current_Q_dict, last_Q_dict, Q2_ago_dict, Q3_ago_dict, milestones)
-    a.save('C://Users//Standalone//Will//Q1_1819_{}_overview_test.docx'.format(x))
+    a.save('C://Users//Standalone//Will//Q1_1920_{}_overview_test.docx'.format(x))
 
