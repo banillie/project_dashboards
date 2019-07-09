@@ -396,6 +396,21 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     except KeyError:
         table5.cell(0, 4).text = 'N/A'
 
+    #TODO complete the below section for SRO schedule DCA as incomplete
+    '''SRO schedule DCA'''
+
+    table6 = doc.add_table(rows=1, cols=5)
+    table6.cell(0, 0).width = Cm(7)
+    table6.cell(0, 0).text = 'Schedule DCA'
+    a = dictionary_1[name]['SRO Schedule Confidence']
+    b = converting_RAGs(a)
+    if a != None:
+        table6.cell(0, 1).text = b
+        cell_colouring(table5.cell(0, 1), b)
+    else:
+        table6.cell(0, 1).text = 'Not reported'
+
+
     '''DCA Narrative text'''
     doc.add_paragraph()  # new
     y = doc.add_paragraph()
