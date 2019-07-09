@@ -296,16 +296,26 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     heading = 'SRO Finance Narrative'
     y.add_run(str(heading)).bold = True
 
-    narrative = combine_narrtives(name, dictionary_1, gmpp_narrative_keys)
-    if narrative == 'NoneNoneNone':
-        fin_text = combine_narrtives(name, dictionary_1, bicc_narrative_keys)
-    else:
-        fin_text = narrative
+    #TODO further testing on code down to 308. current hard code solution not ideal, plus not sure working properly yet
 
-    compare_text_newandold(fin_text, fin_text, doc)
+    gmpp_narrative_keys = ['Project Costs Narrative', 'Cost comparison with last quarters cost - narrative',
+                           'Cost comparison within this quarters cost - narrative']
+
+    fin_text_1 = combine_narrtives(name, dictionary_1, gmpp_narrative_keys)
+    try:
+        fin_text_2 = combine_narrtives(name, dictionary_2, gmpp_narrative_keys)
+    except KeyError:
+        fin_text_2 = fin_text_1
+
+    # if narrative == 'NoneNoneNone':
+    #     fin_text = combine_narrtives(name, dictionary_1, bicc_narrative_keys)
+    # else:
+    #     fin_text = narrative
+
+    compare_text_newandold(fin_text_1, fin_text_2, doc)
     #compare_text_showall()
 
-    '''financial chart heading'''  # new
+    '''financial chart heading'''
     y = doc.add_paragraph()
     heading = 'Financial Analysis - Cost Profile'
     y.add_run(str(heading)).bold = True
@@ -378,7 +388,7 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
     y = doc.add_paragraph()
     y.add_run('The below table presents all project reported remaining high-level milestones, with six months grace '
               'from close of the current quarter. Milestones are sorted in chronological order. Changes in milestones '
-              'dates in comparison to last quarter and one year ago have been calculated and are provided')
+              'dates in comparison to those reported last quarter and one year ago have been calculated and are provided')
     y = doc.add_paragraph()
     y.add_run('{insert chart}')
 
@@ -421,25 +431,34 @@ def all_milestone_data(master_data):
 
     return upper_dict
 
+
+'''RUNNING PROGRAMME'''
+
 quarter_list = ['This Quarter', 'Q4 1819', 'Q3 1819', 'Q2 1819']
 
-gmpp_narrative_keys = ['Project Costs Narrative', 'Cost comparison with last quarters cost - narrative',
-                  'Cost comparison within this quarters cost - narrative']
-
-bicc_narrative_keys = ['Project Costs Narrative RDEL', 'Project Costs Narrative CDEL']
-
+'''1) enter file path to master data'''
 current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\Hs2_NPR_Q1_1918_draft.xlsx')
 last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_4_2018.xlsx')
 Q2_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_3_2018.xlsx')
 Q3_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_2_2018.xlsx')
 
+'''2) select list of projects that dashboards should be built for'''
+'''option one all'''
 current_Q_list = list(current_Q_dict.keys())
-#current_Q_list = ['High Speed Rail Programme (HS2)']
-# current_Q_list.remove('Commercial Vehicle Services (CVS)')
 
+'''option two select group - in dev'''
+#group_list = []
+
+'''option three one prject'''
+#one_proj_list = ['High Speed Rail Programme (HS2)']
+
+'''3) enter the current_Q_dict variable into the below function. NOTE no change required. This is to ensure that the 
+correct milestone dates are displayed in milestone meta data section'''
 milestones = all_milestone_data(current_Q_dict)
 
+'''4) enter file path to where files should be saved. NOTE {} to be kept in file path as this is where project name is 
+eventually placed in project file title'''
 for x in current_Q_list:
     a = printing(x, current_Q_dict, last_Q_dict, Q2_ago_dict, Q3_ago_dict, milestones)
-    a.save('C://Users//Standalone//Will//Q1_1920_{}_overview_test.docx'.format(x))
+    a.save('C://Users//Standalone//Will//Q1_1920_{}_overview.docx'.format(x))
 
