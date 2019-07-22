@@ -336,26 +336,29 @@ def printing(name, dictionary_1, dictionary_2, dictionary_3, dictionary_4, miles
 
     key_dates = milestone_dict[name]
 
-    c = key_dates['Start of Project']
+    #c = key_dates['Start of Project']
     try:
+        c = key_dates['Start of Project']
         c = datetime.datetime.strptime(c.isoformat(), '%Y-%M-%d').strftime('%d/%M/%Y')
-    except AttributeError:
-        c = 'None'
+    except (KeyError, AttributeError):
+        c = 'Not reported'
 
     table1.cell(1, 0).text = str(c)
+
     table1.cell(1, 1).text = str(dictionary_1[name]['BICC approval point'])
 
-    a = key_dates['Start of Operation']
     try:
+        a = key_dates['Start of Operation']
         a = datetime.datetime.strptime(a.isoformat(), '%Y-%M-%d').strftime('%d/%M/%Y')
         table1.cell(1, 2).text = str(a)
-    except AttributeError:
-        table1.cell(1, 2).text = 'None'
+    except (KeyError, AttributeError):
+        table1.cell(1, 2).text = 'Not reported'
 
-    b = key_dates['Project End Date']
+    #b = key_dates['Project End Date']
     try:
+        b = key_dates['Project End Date']
         b = datetime.datetime.strptime(b.isoformat(), '%Y-%M-%d').strftime('%d/%M/%Y')
-    except AttributeError:
+    except (KeyError, AttributeError):
         b = 'Not reported'
     table1.cell(1, 3).text = str(b)
 
@@ -437,10 +440,10 @@ def all_milestone_data(master_data):
 quarter_list = ['This Quarter', 'Q4 1819', 'Q3 1819', 'Q2 1819']
 
 '''1) enter file path to master data'''
-current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\Hs2_NPR_Q1_1918_draft.xlsx')
-last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_4_2018.xlsx')
-Q2_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_3_2018.xlsx')
-Q3_ago_dict = project_data_from_master('C:\\Users\\Standalone\\Will\\masters folder\\core data\\master_2_2018.xlsx')
+current_Q_dict = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_1_2019_wip_(18_7_19).xlsx')
+last_Q_dict = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_4_2018.xlsx')
+Q2_ago_dict = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_3_2018.xlsx')
+Q3_ago_dict = project_data_from_master('C:\\Users\\Standalone\\general\\masters folder\\core data\\master_2_2018.xlsx')
 
 '''2) select list of projects that dashboards should be built for'''
 '''option one all'''
@@ -460,5 +463,5 @@ milestones = all_milestone_data(current_Q_dict)
 eventually placed in project file title'''
 for x in current_Q_list:
     a = printing(x, current_Q_dict, last_Q_dict, Q2_ago_dict, Q3_ago_dict, milestones)
-    a.save('C://Users//Standalone//Will//Q1_1920_{}_overview.docx'.format(x))
+    a.save('C://Users//Standalone//general//Q1_1920_{}_overview.docx'.format(x))
 
